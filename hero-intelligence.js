@@ -190,6 +190,7 @@
       uniform float uAspect;
       uniform vec2 uPointer;
       uniform float uPointScale;
+      uniform float uOffsetX;
       out float vSeed;
       out float vDepth;
 
@@ -221,6 +222,7 @@
         float camera = 3.25;
         float depth = camera - p.z;
         vec2 projected = vec2(p.x / uAspect, p.y) * (2.45 / depth);
+        projected.x += uOffsetX;
         gl_Position = vec4(projected, 0.0, 1.0);
         gl_PointSize = uPointScale * (1.5 + aSeed * 2.4) * (3.0 / depth);
         vSeed = aSeed;
@@ -263,6 +265,7 @@
     const pointProgram = program(gl, vertex, pointFragment);
     const lineProgram = program(gl, vertex, lineFragment);
     const mobile = window.matchMedia('(max-width: 720px)').matches;
+    const stacked = window.matchMedia('(max-width: 900px)').matches;
     const count = mobile ? 680 : 1380;
     const positions = buildPositions(count);
 
@@ -378,6 +381,7 @@
       gl.uniform1f(gl.getUniformLocation(activeProgram, 'uAspect'), aspect);
       gl.uniform2f(gl.getUniformLocation(activeProgram, 'uPointer'), pointer.x, pointer.y);
       gl.uniform1f(gl.getUniformLocation(activeProgram, 'uPointScale'), dpr * (mobile ? 2.3 : 2.7));
+      gl.uniform1f(gl.getUniformLocation(activeProgram, 'uOffsetX'), stacked ? 0.0 : 0.34);
       gl.uniform3f(gl.getUniformLocation(activeProgram, 'uAccent'), accent[0], accent[1], accent[2]);
     }
 
