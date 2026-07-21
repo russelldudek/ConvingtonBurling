@@ -1,0 +1,112 @@
+name: Verify restored Covington Pages experience
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/verify-live-restoration.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Verify live routes and exact content
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE='https://russelldudek.github.io/ConvingtonBurling/'
+          mkdir -p /tmp/live
+
+          fetch_with_retry() {
+            local route="$1"
+            local output="$2"
+            local code='000'
+            for attempt in $(seq 1 24); do
+              code=$(curl -L -sS --connect-timeout 10 --max-time 30 -o "$output" -w '%{http_code}' "${BASE}${route}" || true)
+              if [ "$code" = '200' ]; then
+                echo "$code"
+                return 0
+              fi
+              sleep 10
+            done
+            echo "$code"
+            return 1
+          }
+
+          root_code=$(fetch_with_retry '' /tmp/live/index.html || true)
+          direct_code=$(fetch_with_retry 'index-direct.html' /tmp/live/index-direct.html || true)
+          styles_code=$(fetch_with_retry 'styles.css' /tmp/live/styles.css || true)
+          app_code=$(fetch_with_retry 'app.js' /tmp/live/app.js || true)
+          resume_code=$(fetch_with_retry 'resume.html' /tmp/live/resume.html || true)
+          pdf_code=$(fetch_with_retry 'pdfs/Russell-Dudek-Covington-Resume.pdf' /tmp/live/resume.pdf || true)
+
+          outcome='success'
+          for code in "$root_code" "$direct_code" "$styles_code" "$app_code" "$resume_code" "$pdf_code"; do
+            [ "$code" = '200' ] || outcome='failure'
+          done
+
+          exact_root=false
+          exact_direct=false
+          exact_styles=false
+          exact_app=false
+          exact_resume=false
+          exact_pdf=false
+          [ "$root_code" = '200' ] && cmp -s index.html /tmp/live/index.html && exact_root=true
+          [ "$direct_code" = '200' ] && cmp -s index-direct.html /tmp/live/index-direct.html && exact_direct=true
+          [ "$styles_code" = '200' ] && cmp -s styles.css /tmp/live/styles.css && exact_styles=true
+          [ "$app_code" = '200' ] && cmp -s app.js /tmp/live/app.js && exact_app=true
+          [ "$resume_code" = '200' ] && cmp -s resume.html /tmp/live/resume.html && exact_resume=true
+          [ "$pdf_code" = '200' ] && cmp -s pdfs/Russell-Dudek-Covington-Resume.pdf /tmp/live/resume.pdf && exact_pdf=true
+
+          for exact in "$exact_root" "$exact_direct" "$exact_styles" "$exact_app" "$exact_resume" "$exact_pdf"; do
+            [ "$exact" = true ] || outcome='failure'
+          done
+
+          live_signature=false
+          credential_absent=false
+          correct_url=false
+          [ "$direct_code" = '200' ] && grep -q 'Build the common law of AI-enabled work' /tmp/live/index-direct.html && live_signature=true
+          [ "$resume_code" = '200' ] && ! grep -q 'Food Safety Management Certification' /tmp/live/resume.html && credential_absent=true
+          [ "$resume_code" = '200' ] && grep -q 'https://russelldudek.github.io/ConvingtonBurling/' /tmp/live/resume.html && correct_url=true
+
+          [ "$live_signature" = true ] || outcome='failure'
+          [ "$credential_absent" = true ] || outcome='failure'
+          [ "$correct_url" = true ] || outcome='failure'
+
+          cat > live-verification.json <<JSON
+          {
+            "live_url": "${BASE}",
+            "verified_commit": "$(git rev-parse HEAD)",
+            "outcome": "${outcome}",
+            "http": {
+              "root": "${root_code}",
+              "standalone": "${direct_code}",
+              "styles": "${styles_code}",
+              "app": "${app_code}",
+              "resume_html": "${resume_code}",
+              "resume_pdf": "${pdf_code}"
+            },
+            "exact_byte_match": {
+              "root": ${exact_root},
+              "standalone": ${exact_direct},
+              "styles": ${exact_styles},
+              "app": ${exact_app},
+              "resume_html": ${exact_resume},
+              "resume_pdf": ${exact_pdf}
+            },
+            "approved_signature_found": ${live_signature},
+            "food_safety_credential_absent": ${credential_absent},
+            "correct_candidate_vision_url_found": ${correct_url}
+          }
+          JSON
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add live-verification.json
+          git commit -m "Record restored Covington live verification"
+          git push
