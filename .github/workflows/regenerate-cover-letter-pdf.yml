@@ -65,3 +65,5 @@ jobs:
           fi
           git commit -m 'Update downloadable cover letter date to July 21 2026'
           git push origin HEAD:main
+
+# Trigger after workflow registration on the default branch.
