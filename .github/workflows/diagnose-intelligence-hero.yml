@@ -1,0 +1,122 @@
+name: Diagnose intelligence hero
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/diagnose-intelligence-hero.yml
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run self-reporting browser verification
+        shell: bash
+        run: |
+          mkdir -p qa-output
+          set +e
+          {
+            echo '=== source checks ==='
+            node --check hero-intelligence.js
+            grep -q 'hero-intelligence.css' index-direct.html
+            grep -q 'hero-intelligence.js' index-direct.html
+            grep -q 'intelligenceCanvas' index-direct.html
+            ! grep -q 'class="engine-layer"' index-direct.html
+
+            echo '=== browser setup ==='
+            npm init -y
+            npm install playwright@1.55.0
+            npx playwright install --with-deps chromium
+
+            cat > /tmp/hero-smoke.mjs <<'JS'
+            import { chromium } from 'playwright';
+            import assert from 'node:assert/strict';
+            import fs from 'node:fs';
+            const target=process.argv[2];
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage({viewport:{width:1440,height:1000}});
+            const errors=[];
+            page.on('console',m=>{if(m.type()==='error')errors.push(m.text())});
+            page.on('pageerror',e=>errors.push(e.message));
+            await page.goto(target,{waitUntil:'networkidle',timeout:90000});
+            await page.waitForSelector('#intelligenceCanvas');
+            await page.waitForTimeout(1400);
+            const state=await page.evaluate(()=>{
+              const canvas=document.querySelector('#intelligenceCanvas');
+              const gl=canvas?.getContext('webgl2');
+              return {
+                title:document.title,
+                treatment:document.body.dataset.treatment,
+                mode:document.querySelector('#heroEngine')?.dataset.intelligenceMode,
+                webgl:Boolean(gl),
+                glVersion:gl?.getParameter(gl.VERSION)||'',
+                canvasWidth:canvas?.width||0,
+                canvasHeight:canvas?.height||0,
+                legacyLayers:document.querySelectorAll('.engine-layer').length,
+                firstControl:document.querySelector('.lab-controls > .control-group')?.id||'',
+                cta:document.querySelector('.hero-primary')?.getAttribute('href')||'',
+                overflow:document.documentElement.scrollWidth-document.documentElement.clientWidth
+              };
+            });
+            assert.equal(state.treatment,'prototype');
+            assert.equal(state.mode,'prototype');
+            assert.equal(state.webgl,true);
+            assert.ok(state.canvasWidth>800&&state.canvasHeight>500);
+            assert.equal(state.legacyLayers,0);
+            assert.equal(state.firstControl,'treatmentControls');
+            assert.equal(state.cta,'#treatmentControls');
+            assert.equal(state.overflow,0);
+            await page.screenshot({path:'qa-output/hero-desktop.png'});
+            await page.locator('[data-stage="practice"]').click();
+            await page.waitForFunction(()=>document.body.dataset.treatment==='practice'&&document.querySelector('#heroEngine')?.dataset.intelligenceMode==='practice');
+            assert.equal(await page.locator('#heroTreatment').innerText(),'Practice pattern');
+            await page.screenshot({path:'qa-output/hero-practice.png'});
+            await page.setViewportSize({width:390,height:844});
+            await page.goto(target,{waitUntil:'networkidle',timeout:90000});
+            await page.waitForTimeout(900);
+            assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth),0);
+            await page.screenshot({path:'qa-output/hero-mobile.png'});
+            assert.deepEqual(errors,[]);
+            fs.writeFileSync('qa-output/browser-state.json',JSON.stringify({target,state,errors,outcome:'success'},null,2));
+            await browser.close();
+            JS
+
+            python3 -m http.server 4173 >/tmp/server.log 2>&1 &
+            server_pid=$!
+            sleep 2
+            node /tmp/hero-smoke.mjs http://127.0.0.1:4173/index-direct.html
+            kill "$server_pid" || true
+
+            echo '=== live release ==='
+            LIVE=https://russelldudek.github.io/ConvingtonBurling
+            ready=0
+            for i in $(seq 1 36); do
+              if curl -fsS "$LIVE/hero-intelligence.js?attempt=$i" -o /tmp/live.js && cmp -s hero-intelligence.js /tmp/live.js; then ready=1; break; fi
+              sleep 5
+            done
+            test "$ready" = 1
+            node /tmp/hero-smoke.mjs "$LIVE/index-direct.html"
+          } >qa-output/diagnostic.log 2>&1
+          status=$?
+          echo "$status" >qa-output/diagnostic-exit-code.txt
+          if [ "$status" = 0 ]; then echo success >qa-output/diagnostic-outcome.txt; else echo failure >qa-output/diagnostic-outcome.txt; fi
+          exit 0
+      - name: Commit diagnostic evidence and remove runners
+        if: always()
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git rm -f .github/workflows/diagnose-intelligence-hero.yml .github/workflows/verify-intelligence-hero.yml || true
+          git add qa-output
+          git commit -m "Record intelligence hero diagnostic"
+          git push
