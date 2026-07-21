@@ -1,0 +1,47 @@
+name: Build treatment QA visual review
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/build-treatment-qa-pdf.yml
+
+permissions:
+  contents: write
+
+jobs:
+  build-pdf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build visual review PDF
+        run: |
+          python3 -m pip install --quiet pillow
+          python3 - <<'PY'
+          from PIL import Image, ImageOps, ImageDraw
+          from pathlib import Path
+          files = [
+              ('Desktop · Cross-practice candidate', Path('qa-output/live-candidate-desktop.png')),
+              ('Mobile 390 px', Path('qa-output/live-mobile390.png')),
+              ('Mobile 320 px', Path('qa-output/live-mobile320.png')),
+          ]
+          pages=[]
+          for title, path in files:
+              image=Image.open(path).convert('RGB')
+              canvas=Image.new('RGB', (1600, 1100), 'white')
+              draw=ImageDraw.Draw(canvas)
+              draw.text((70,45), title, fill='black')
+              fitted=ImageOps.contain(image, (1460, 970))
+              x=(1600-fitted.width)//2
+              y=100+(970-fitted.height)//2
+              canvas.paste(fitted,(x,y))
+              pages.append(canvas)
+          pages[0].save('qa-output/treatment-visual-review.pdf', save_all=True, append_images=pages[1:], resolution=144)
+          PY
+      - name: Commit visual review
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add qa-output/treatment-visual-review.pdf
+          git commit -m "Add treatment visual QA review"
+          git push
