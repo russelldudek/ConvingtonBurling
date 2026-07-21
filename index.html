@@ -27,8 +27,100 @@
   <script>
     const viewer=document.getElementById('viewer');
     const loading=document.getElementById('loading');
-    viewer.addEventListener('load',()=>{loading.hidden=true},{once:true});
-    window.setTimeout(()=>{loading.hidden=true},6000);
+
+    function enhanceTreatmentRail(){
+      try{
+        const doc=viewer.contentDocument;
+        const win=viewer.contentWindow;
+        const rail=doc?.querySelector('.engine-stage-rail');
+        if(!doc||!win||!rail||rail.dataset.interactive==='true') return;
+
+        rail.dataset.interactive='true';
+        rail.setAttribute('role','group');
+        rail.setAttribute('aria-label','Set the evidence treatment');
+
+        const style=doc.createElement('style');
+        style.id='interactive-hero-treatment-styles';
+        style.textContent=`
+          .engine-stage-rail .engine-stage-control{
+            appearance:none;-webkit-appearance:none;border:0;background:transparent;margin:0;
+            display:flex;align-items:center;gap:7px;width:100%;padding:5px 4px;
+            color:#687d9b;font:850 8px/1.2 var(--sans);letter-spacing:.09em;
+            text-align:left;text-transform:uppercase;cursor:pointer;
+            transition:color .24s ease,transform .24s ease,background .24s ease;
+          }
+          .engine-stage-rail .engine-stage-control i{
+            display:grid;place-items:center;flex:0 0 auto;width:24px;height:24px;
+            border:1px solid rgba(255,255,255,.14);font-style:normal;font-size:7px;
+            transition:border-color .24s ease,background .24s ease,box-shadow .24s ease;
+          }
+          .engine-stage-rail .engine-stage-control:hover{color:#fff;transform:translateY(-2px)}
+          .engine-stage-rail .engine-stage-control:hover i{border-color:rgba(var(--treatment-accent-rgb),.75)}
+          .engine-stage-rail .engine-stage-control.is-complete{color:#c7d4e5}
+          .engine-stage-rail .engine-stage-control.is-complete i{border-color:rgba(var(--treatment-accent-rgb),.55);background:rgba(var(--treatment-accent-rgb),.12)}
+          .engine-stage-rail .engine-stage-control.is-current{color:var(--white)}
+          .engine-stage-rail .engine-stage-control.is-current i{border-color:var(--treatment-accent);background:var(--treatment-accent);color:#061126;box-shadow:0 0 20px rgba(var(--treatment-accent-rgb),.55)}
+          .engine-stage-rail .engine-stage-control:focus-visible{outline:2px solid var(--treatment-soft);outline-offset:4px;background:rgba(var(--treatment-accent-rgb),.09)}
+          @media(max-width:720px){.engine-stage-rail .engine-stage-control{font-size:7px;gap:5px;padding-inline:2px}.engine-stage-rail .engine-stage-control i{width:22px;height:22px}}
+          @media(prefers-reduced-motion:reduce){.engine-stage-rail .engine-stage-control{transition:none}.engine-stage-rail .engine-stage-control:hover{transform:none}}
+        `;
+        doc.head.appendChild(style);
+
+        const passive=[...rail.querySelectorAll('[data-engine-stage]')];
+        passive.forEach((node)=>{
+          if(node.tagName==='BUTTON') return;
+          const button=doc.createElement('button');
+          button.type='button';
+          button.className=`engine-stage-control ${node.className}`.trim();
+          button.dataset.engineStage=node.dataset.engineStage;
+          button.innerHTML=node.innerHTML;
+          button.setAttribute('aria-label',`Set evidence treatment to ${node.textContent.trim()}`);
+          node.replaceWith(button);
+        });
+
+        const controls=[...rail.querySelectorAll('.engine-stage-control')];
+        const sync=()=>{
+          const active=doc.body.dataset.treatment||'prototype';
+          controls.forEach((button)=>{
+            const selected=button.dataset.engineStage===active;
+            button.setAttribute('aria-pressed',String(selected));
+            button.tabIndex=selected?0:-1;
+          });
+        };
+        const activate=(button)=>{
+          const engine=win.__precedentEngine;
+          const current=engine?.getState?.()||{scenario:'corporate'};
+          engine?.renderState({scenario:current.scenario,stage:button.dataset.engineStage,animate:true});
+          sync();
+        };
+
+        controls.forEach((button,index)=>{
+          button.addEventListener('click',()=>activate(button));
+          button.addEventListener('keydown',(event)=>{
+            if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key)) return;
+            event.preventDefault();
+            let next=index;
+            if(event.key==='Home') next=0;
+            else if(event.key==='End') next=controls.length-1;
+            else next=(index+(event.key==='ArrowRight'?1:-1)+controls.length)%controls.length;
+            controls[next].focus();
+            activate(controls[next]);
+          });
+        });
+
+        new MutationObserver(sync).observe(doc.body,{attributes:true,attributeFilter:['data-treatment']});
+        sync();
+      }catch(error){
+        console.warn('Hero treatment controls could not be enhanced.',error);
+      }
+    }
+
+    viewer.addEventListener('load',()=>{
+      loading.hidden=true;
+      enhanceTreatmentRail();
+      window.setTimeout(enhanceTreatmentRail,250);
+    });
+    window.setTimeout(()=>{loading.hidden=true;enhanceTreatmentRail()},6000);
   </script>
 </body>
 </html>
