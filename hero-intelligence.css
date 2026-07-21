@@ -1,3 +1,5 @@
+@import url("entry-hover.css");
+
 /* 2026 hero: a living intelligence field, not a stack of panels. */
 .hero-intelligence{
   --hero-accent:var(--treatment-accent,#42c5f5);
