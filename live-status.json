@@ -1,0 +1,36 @@
+{
+  "outcome": "success",
+  "verified_source_sha": "e367e90230ce9d58bc77f356d620604c86d372dd",
+  "live_url": "https://russelldudek.github.io/ConvingtonBurling/",
+  "routes": {
+    "root": 200,
+    "standalone": 200,
+    "app_js": 200,
+    "treatment_css": 200
+  },
+  "exact_byte_match": {
+    "app_js": true,
+    "treatment_css": true
+  },
+  "sha256": {
+    "app_js": "77c28a151b9e7f98ebca72f70c2aef366d19a7acb846d748f45d6343d1650c6a",
+    "treatment_css": "3da99385f324369f96a007357d29a5d7d9665e887ea563fca742f14483155846"
+  },
+  "rendered_qa": {
+    "local": "passed",
+    "live": "passed",
+    "viewports": [
+      "1440x1000",
+      "1280x900",
+      "768x1024",
+      "390x844",
+      "320x800"
+    ],
+    "keyboard": "passed",
+    "rapid_selection": "passed",
+    "reduced_motion": "passed",
+    "horizontal_overflow": 0,
+    "console_errors": 0
+  },
+  "interaction_contract": "Step 2 rewrites all six Step 1 evidence layers plus scale permission, proof burden, ownership, treatment, next decision, hero state, controls, and ARIA announcement as one transaction."
+}
