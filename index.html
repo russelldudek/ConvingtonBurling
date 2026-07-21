@@ -28,8 +28,42 @@
     const viewer=document.getElementById('viewer');
     const loading=document.getElementById('loading');
 
+    function normalizeExperienceOrder(){
+      try{
+        const doc=viewer.contentDocument;
+        const controls=doc?.querySelector('.lab-controls');
+        const stageControls=controls?.querySelector('.stage-controls');
+        const scenarioControls=controls?.querySelector('.scenario-controls');
+        const treatmentGroup=stageControls?.closest('.control-group');
+        const workflowGroup=scenarioControls?.closest('.control-group');
+        const reset=doc?.getElementById('resetLab');
+        if(!doc||!controls||!treatmentGroup||!workflowGroup) return;
+
+        workflowGroup.id='workflowControls';
+        workflowGroup.classList.add('control-group-workflow');
+        treatmentGroup.id='treatmentControls';
+        treatmentGroup.classList.add('control-group-treatment');
+        controls.insertBefore(workflowGroup,treatmentGroup);
+        if(reset) controls.appendChild(reset);
+
+        const heading=doc.querySelector('.lab-heading h2');
+        if(heading) heading.textContent='Choose the legal workflow—then set its evidence treatment.';
+        const summary=doc.querySelector('.lab-heading > p');
+        if(summary) summary.textContent='Start with the legal work. Then choose the evidence, authority, ownership, proof, and scale permission required before that workflow can travel.';
+
+        const primary=doc.querySelector('.hero-primary');
+        if(primary){
+          primary.setAttribute('href','#workflowControls');
+          primary.innerHTML='Choose the legal workflow <span aria-hidden="true">↘</span>';
+        }
+      }catch(error){
+        console.warn('The workflow-first sequence could not be restored.',error);
+      }
+    }
+
     function enhanceTreatmentRail(){
       try{
+        normalizeExperienceOrder();
         const doc=viewer.contentDocument;
         const win=viewer.contentWindow;
         const rail=doc?.querySelector('.engine-stage-rail');
@@ -42,11 +76,12 @@
         const style=doc.createElement('style');
         style.id='interactive-hero-treatment-styles';
         style.textContent=`
+          .engine-stage-rail[data-interactive="true"]{pointer-events:auto}
           .engine-stage-rail .engine-stage-control{
             appearance:none;-webkit-appearance:none;border:0;background:transparent;margin:0;
             display:flex;align-items:center;gap:7px;width:100%;padding:5px 4px;
             color:#687d9b;font:850 8px/1.2 var(--sans);letter-spacing:.09em;
-            text-align:left;text-transform:uppercase;cursor:pointer;
+            text-align:left;text-transform:uppercase;cursor:pointer;pointer-events:auto;
             transition:color .24s ease,transform .24s ease,background .24s ease;
           }
           .engine-stage-rail .engine-stage-control i{
@@ -117,10 +152,11 @@
 
     viewer.addEventListener('load',()=>{
       loading.hidden=true;
+      normalizeExperienceOrder();
       enhanceTreatmentRail();
-      window.setTimeout(enhanceTreatmentRail,250);
+      window.setTimeout(()=>{normalizeExperienceOrder();enhanceTreatmentRail()},250);
     });
-    window.setTimeout(()=>{loading.hidden=true;enhanceTreatmentRail()},6000);
+    window.setTimeout(()=>{loading.hidden=true;normalizeExperienceOrder();enhanceTreatmentRail()},6000);
   </script>
 </body>
 </html>
