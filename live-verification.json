@@ -1,0 +1,24 @@
+{
+  "live_url": "https://russelldudek.github.io/ConvingtonBurling/",
+  "verified_commit": "84f672736d6718f806250a5bd9ae8026e06960fb",
+  "outcome": "success",
+  "http": {
+    "root": "200",
+    "standalone": "200",
+    "styles": "200",
+    "app": "200",
+    "resume_html": "200",
+    "resume_pdf": "200"
+  },
+  "exact_byte_match": {
+    "root": true,
+    "standalone": true,
+    "styles": true,
+    "app": true,
+    "resume_html": true,
+    "resume_pdf": true
+  },
+  "approved_signature_found": true,
+  "food_safety_credential_absent": true,
+  "correct_candidate_vision_url_found": true
+}
