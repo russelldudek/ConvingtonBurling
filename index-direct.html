@@ -7,7 +7,9 @@
   <title>Russell Dudek | Director of Applied AI Candidate Vision</title>
   <meta name="description" content="An independent candidate vision for leading applied AI delivery across Covington's legal practices.">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="hero-intelligence.css">
   <script src="app.js" defer></script>
+  <script src="hero-intelligence.js" defer></script>
 </head>
 <body class="site-body">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -35,73 +37,35 @@
   </header>
 
   <main id="main">
-    <section class="hero" aria-labelledby="heroTitle">
-      <div class="hero-grid" aria-hidden="true"></div>
-      <div class="hero-glow hero-glow-one" aria-hidden="true"></div>
-      <div class="hero-glow hero-glow-two" aria-hidden="true"></div>
-      <div class="hero-inner">
+    <section class="hero hero-intelligence" aria-labelledby="heroTitle">
+      <canvas id="intelligenceCanvas" aria-hidden="true"></canvas>
+      <div class="hero-inner hero-intelligence-inner">
         <div class="hero-copy">
           <p class="hero-context">Covington &amp; Burling LLP · Director of Applied AI</p>
           <h1 id="heroTitle">Build the common law of AI-enabled work.</h1>
           <p class="hero-lead">Turn practice-specific experiments into trusted workflow precedent—without erasing the judgment, privilege, context, and accountability that make legal work defensible.</p>
           <div class="hero-actions">
-            <a class="hero-primary" href="#precedentLab">Explore the operating model <span aria-hidden="true">↘</span></a>
+            <a class="hero-primary" href="#treatmentControls">Set the evidence treatment <span aria-hidden="true">↘</span></a>
             <a class="hero-secondary" href="resume.html">View the role-aligned resume</a>
           </div>
-          <div class="hero-proof" aria-label="Candidate positioning">
-            <span>Practice-aligned delivery</span>
-            <span>Knowledge-grounded AI</span>
-            <span>Governed human authority</span>
-            <span>Measured adoption and value</span>
+          <div class="hero-state" aria-live="polite">
+            <div class="hero-state-mark" aria-hidden="true"></div>
+            <div>
+              <span>Current evidence posture</span>
+              <strong id="heroTreatment">Matter prototype</strong>
+              <small id="heroTreatmentIntent">One bounded matter. Tight evidence boundary. Every consequential output stays under named human review.</small>
+            </div>
           </div>
         </div>
 
-        <div class="engine-hero" id="heroEngine" data-state="assembling" aria-label="Living Precedent Engine showing seven evidence layers">
-          <div class="engine-orbit" aria-hidden="true"></div>
-          <div class="engine-caption">
-            <span>Living Precedent Engine</span>
-            <strong data-field="scenarioShort">Corporate diligence</strong>
-          </div>
-
-          <div class="engine-desktop" aria-hidden="true">
-            <div class="authority-thread"></div>
-            <div class="engine-layer" data-engine-layer="fact" style="--i:0">
-              <span class="engine-index">01</span><span class="engine-label">Fact pattern</span><span class="engine-value" data-field="factShort">Issue spotting across deal documents</span>
-            </div>
-            <div class="engine-layer" data-engine-layer="knowledge" style="--i:1">
-              <span class="engine-index">02</span><span class="engine-label">Knowledge record</span><span class="engine-value" data-field="knowledgeShort">Approved corpus, taxonomy, provenance</span>
-            </div>
-            <div class="engine-layer authority-layer" data-engine-layer="authority" style="--i:2">
-              <span class="engine-index">03</span><span class="engine-label">Human authority</span><span class="engine-value" data-field="authorityShort">Lawyers retain legal judgment</span>
-            </div>
-            <div class="engine-layer" data-engine-layer="evaluation" style="--i:3">
-              <span class="engine-index">04</span><span class="engine-label">Evaluation</span><span class="engine-value" data-field="evaluationShort">Citations, omissions, repeatability</span>
-            </div>
-            <div class="engine-layer" data-engine-layer="adoption" style="--i:4">
-              <span class="engine-index">05</span><span class="engine-label">Adoption + ownership</span><span class="engine-value" data-field="adoptionShort">Embedded workflow and named owners</span>
-            </div>
-            <div class="engine-layer" data-engine-layer="value" style="--i:5">
-              <span class="engine-index">06</span><span class="engine-label">Value evidence</span><span class="engine-value" data-field="valueShort">Cycle time, rework, coverage, reuse</span>
-            </div>
-            <div class="engine-layer treatment-layer" data-engine-layer="treatment" style="--i:6">
-              <span class="engine-index">07</span><span class="engine-label">Precedent treatment</span><strong class="engine-value" data-field="disposition">Practice pattern</strong>
-            </div>
-          </div>
-
-          <div class="engine-mobile" aria-hidden="true">
-            <div><span>01</span><small>Fact pattern</small><strong data-field="factShort">Issue spotting across deal documents</strong></div>
-            <div><span>02</span><small>Knowledge record</small><strong data-field="knowledgeShort">Approved corpus, taxonomy, provenance</strong></div>
-            <div class="mobile-authority"><span>03</span><small>Human authority</small><strong data-field="authorityShort">Lawyers retain legal judgment</strong></div>
-            <div><span>04</span><small>Evaluation</small><strong data-field="evaluationShort">Citations, omissions, repeatability</strong></div>
-            <div><span>05</span><small>Adoption + ownership</small><strong data-field="adoptionShort">Embedded workflow and named owners</strong></div>
-            <div><span>06</span><small>Value evidence</small><strong data-field="valueShort">Cycle time, rework, coverage, reuse</strong></div>
-            <div class="mobile-treatment"><span>07</span><small>Precedent treatment</small><strong data-field="disposition">Practice pattern</strong></div>
-          </div>
-
-          <div class="engine-status">
-            <span>Current treatment</span>
-            <strong data-field="disposition">Practice pattern</strong>
-          </div>
+        <div class="intelligence-stage" id="heroEngine" data-state="assembling" data-treatment="prototype" aria-label="Living Precedent Engine intelligence field">
+          <div class="intelligence-core" aria-hidden="true"></div>
+          <div class="intelligence-node node-fact"><span>Fact pattern</span><strong data-field="factShort">Bound issue spotting across deal documents</strong></div>
+          <div class="intelligence-node node-knowledge"><span>Knowledge record</span><strong data-field="knowledgeShort">Matter-approved sources and trace</strong></div>
+          <div class="intelligence-node node-authority"><span>Human authority</span><strong data-field="authorityShort">Review every consequential output</strong></div>
+          <div class="intelligence-node node-evaluation"><span>Evaluation</span><strong data-field="evaluationShort">Bounded proof and failure log</strong></div>
+          <div class="intelligence-node node-adoption"><span>Adoption + ownership</span><strong data-field="adoptionShort">Small cohort and rapid repair</strong></div>
+          <div class="intelligence-node node-value"><span>Value evidence</span><strong data-field="valueShort">Baseline signal, not broad ROI</strong></div>
         </div>
       </div>
       <a class="scroll-cue" href="#mandate"><span>Read the mandate</span><i aria-hidden="true"></i></a>
